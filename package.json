@@ -1,0 +1,32 @@
+{
+  "name": "kuoob",
+  "version": "1.0.0",
+  "description": "Node.js Backend for Kuoob.com",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index",
+    "dev": "nodemon index"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DivineDemon/kuoob.git"
+  },
+  "keywords": [
+    "Node.js",
+    "Wordpress"
+  ],
+  "author": "Mushood Hanif",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DivineDemon/kuoob/issues"
+  },
+  "homepage": "https://github.com/DivineDemon/kuoob#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
