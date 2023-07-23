@@ -16,6 +16,7 @@ app.use(express.json({ limit: "200mb", extended: true }));
 app.use(express.urlencoded({ limit: "200mb", extended: true }));
 
 // Routes
+app.use("/api/auth", require("./routes/auth"));
 app.use("/api/message", upload.any(), require("./routes/messages"));
 
 // Start Server
