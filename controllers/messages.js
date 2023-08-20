@@ -121,6 +121,25 @@ const getPostMessages = async (req, res) => {
   }
 };
 
+const getUserTypeMessages = async (req, res) => {
+  try {
+    const response = await prisma.wp_comments.findMany({
+      where: {
+        user_id: parseInt(req.query.user_id),
+        comment_type: req.query.comment_type,
+      },
+    });
+
+    if (response.length === 0) {
+      sendResponse(res, 404);
+    } else {
+      sendResponse(res, 200, response);
+    }
+  } catch (error) {
+    sendResponse(res, 500);
+  }
+};
+
 module.exports = {
   getMessage,
   sendMessage,
@@ -128,4 +147,5 @@ module.exports = {
   getUserMessages,
   getTypeMessages,
   getPostMessages,
+  getUserTypeMessages,
 };
