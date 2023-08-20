@@ -1,5 +1,8 @@
 const fs = require("fs").promises;
+const { PrismaClient } = require("@prisma/client");
 const { sendResponse } = require("../utils/responseHandler");
+
+const prisma = new PrismaClient();
 
 const sendMessage = async (req, res) => {
   let userData = await fs.readFile("../kuoob/token.txt", "utf-8");
