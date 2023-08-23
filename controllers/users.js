@@ -17,7 +17,7 @@ const getUserByID = async (req, res) => {
       sendResponse(res, 200, response);
     }
   } catch (error) {
-    sendResponse(res, 500);
+    sendResponse(res, 500, error);
   }
 };
 

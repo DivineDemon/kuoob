@@ -14,3 +14,5 @@ router.route("/").get(getPost);
 router.get("/type", getTypePosts);
 router.get("/user", getUserPosts);
 router.get("/status", getStatusPosts);
+
+module.exports = router;

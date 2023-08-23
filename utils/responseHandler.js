@@ -35,6 +35,7 @@ const sendResponse = (res, statusCode, data) => {
       return res.status(statusCode).json({
         success: false,
         message: "Internal Server Error!",
+        error: data.message,
       });
     default:
       let success = false;

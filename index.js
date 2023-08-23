@@ -5,6 +5,9 @@ const dotenv = require("dotenv").config();
 const express = require("express");
 const { errorHandler } = require("./middleware/errorHandler");
 
+// JSON BigInt Parsing Support for Prisma
+BigInt.prototype.toJSON = function () { return this.toString() };
+
 // App Initialization
 const app = express();
 const upload = multer();
