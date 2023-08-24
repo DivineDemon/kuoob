@@ -11,14 +11,14 @@ model wp_actionscheduler_actions {
   action_id            BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
   hook                 String
   status               String    @db.VarChar(20)
-  scheduled_date_gmt   DateTime? @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
-  scheduled_date_local DateTime? @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  scheduled_date_gmt   DateTime? @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  scheduled_date_local DateTime? @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   args                 String?
   schedule             String?   @db.LongText
   group_id             BigInt    @default(0) @db.UnsignedBigInt
   attempts             Int       @default(0)
-  last_attempt_gmt     DateTime? @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
-  last_attempt_local   DateTime? @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  last_attempt_gmt     DateTime? @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  last_attempt_local   DateTime? @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   claim_id             BigInt    @default(0) @db.UnsignedBigInt
   extended_args        String?   @db.VarChar(8000)
 
@@ -33,7 +33,7 @@ model wp_actionscheduler_actions {
 
 model wp_actionscheduler_claims {
   claim_id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
-  date_created_gmt DateTime? @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  date_created_gmt DateTime? @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
 
   @@index([date_created_gmt], map: "date_created_gmt")
 }
@@ -49,8 +49,8 @@ model wp_actionscheduler_logs {
   log_id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
   action_id      BigInt    @db.UnsignedBigInt
   message        String    @db.Text
-  log_date_gmt   DateTime? @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
-  log_date_local DateTime? @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  log_date_gmt   DateTime? @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  log_date_local DateTime? @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
 
   @@index([action_id], map: "action_id")
   @@index([log_date_gmt], map: "log_date_gmt")
@@ -180,8 +180,8 @@ model wp_comments {
   comment_author_email String   @default("") @db.VarChar(100)
   comment_author_url   String   @default("") @db.VarChar(200)
   comment_author_IP    String   @default("") @db.VarChar(100)
-  comment_date         DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
-  comment_date_gmt     DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  comment_date         DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  comment_date_gmt     DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   comment_content      String   @db.Text
   comment_karma        Int      @default(0)
   comment_approved     String   @default("1") @db.VarChar(20)
@@ -216,7 +216,7 @@ model wp_links {
   link_visible     String   @default("Y") @db.VarChar(20)
   link_owner       BigInt   @default(1) @db.UnsignedBigInt
   link_rating      Int      @default(0)
-  link_updated     DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  link_updated     DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   link_rel         String   @default("") @db.VarChar(255)
   link_notes       String   @db.MediumText
   link_rss         String   @default("") @db.VarChar(255)
@@ -272,8 +272,8 @@ model wp_postmeta {
 model wp_posts {
   ID                    BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
   post_author           BigInt   @default(0) @db.UnsignedBigInt
-  post_date             DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
-  post_date_gmt         DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  post_date             DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  post_date_gmt         DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   post_content          String   @db.LongText
   post_title            String   @db.Text
   post_excerpt          String   @db.Text
@@ -284,8 +284,8 @@ model wp_posts {
   post_name             String   @default("") @db.VarChar(200)
   to_ping               String   @db.Text
   pinged                String   @db.Text
-  post_modified         DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
-  post_modified_gmt     DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  post_modified         DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  post_modified_gmt     DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   post_content_filtered String   @db.LongText
   post_parent           BigInt   @default(0) @db.UnsignedBigInt
   guid                  String   @default("") @db.VarChar(255)
@@ -427,7 +427,7 @@ model wp_users {
   user_nicename       String   @default("") @db.VarChar(50)
   user_email          String   @default("") @db.VarChar(100)
   user_url            String   @default("") @db.VarChar(100)
-  user_registered     DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  user_registered     DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   user_activation_key String   @default("") @db.VarChar(255)
   user_status         Int      @default(0)
   display_name        String   @default("") @db.VarChar(250)
@@ -461,7 +461,7 @@ model wp_wc_admin_notes {
   content_data  String?   @db.LongText
   status        String    @db.VarChar(200)
   source        String    @db.VarChar(200)
-  date_created  DateTime  @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  date_created  DateTime  @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   date_reminder DateTime? @db.DateTime(0)
   is_snoozable  Boolean   @default(false)
   layout        String    @default("") @db.VarChar(20)
@@ -509,7 +509,7 @@ model wp_wc_download_log {
 model wp_wc_order_coupon_lookup {
   order_id        BigInt   @db.UnsignedBigInt
   coupon_id       BigInt
-  date_created    DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  date_created    DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   discount_amount Float    @default(0)
 
   @@id([order_id, coupon_id])
@@ -523,7 +523,7 @@ model wp_wc_order_product_lookup {
   product_id            BigInt   @db.UnsignedBigInt
   variation_id          BigInt   @db.UnsignedBigInt
   customer_id           BigInt?  @db.UnsignedBigInt
-  date_created          DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  date_created          DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   product_qty           Int
   product_net_revenue   Float    @default(0)
   product_gross_revenue Float    @default(0)
@@ -541,8 +541,8 @@ model wp_wc_order_product_lookup {
 model wp_wc_order_stats {
   order_id           BigInt    @id @db.UnsignedBigInt
   parent_id          BigInt    @default(0) @db.UnsignedBigInt
-  date_created       DateTime  @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
-  date_created_gmt   DateTime  @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  date_created       DateTime  @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  date_created_gmt   DateTime  @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   num_items_sold     Int       @default(0)
   total_sales        Float     @default(0)
   tax_total          Float     @default(0)
@@ -551,8 +551,8 @@ model wp_wc_order_stats {
   returning_customer Boolean?
   status             String    @db.VarChar(200)
   customer_id        BigInt    @db.UnsignedBigInt
-  date_paid          DateTime? @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
-  date_completed     DateTime? @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  date_paid          DateTime? @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  date_completed     DateTime? @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
 
   @@index([customer_id], map: "customer_id")
   @@index([date_created], map: "date_created")
@@ -562,7 +562,7 @@ model wp_wc_order_stats {
 model wp_wc_order_tax_lookup {
   order_id     BigInt   @db.UnsignedBigInt
   tax_rate_id  BigInt   @db.UnsignedBigInt
-  date_created DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  date_created DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   shipping_tax Float    @default(0)
   order_tax    Float    @default(0)
   total_tax    Float    @default(0)
@@ -627,8 +627,8 @@ model wp_wc_reserved_stock {
   order_id       BigInt
   product_id     BigInt
   stock_quantity Float    @default(0)
-  timestamp      DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
-  expires        DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  timestamp      DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  expires        DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
 
   @@id([order_id, product_id])
 }
@@ -647,10 +647,10 @@ model wp_wc_webhooks {
   delivery_url      String   @db.Text
   secret            String   @db.Text
   topic             String   @db.VarChar(200)
-  date_created      DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
-  date_created_gmt  DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
-  date_modified     DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
-  date_modified_gmt DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  date_created      DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  date_created_gmt  DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  date_modified     DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  date_modified_gmt DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   api_version       Int      @db.SmallInt
   failure_count     Int      @default(0) @db.SmallInt
   pending_delivery  Boolean  @default(false)
@@ -693,7 +693,7 @@ model wp_woocommerce_downloadable_product_permissions {
   user_email          String    @db.VarChar(200)
   user_id             BigInt?   @db.UnsignedBigInt
   downloads_remaining String?   @db.VarChar(9)
-  access_granted      DateTime  @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  access_granted      DateTime  @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   access_expires      DateTime? @db.DateTime(0)
   download_count      BigInt    @default(0) @db.UnsignedBigInt
 
