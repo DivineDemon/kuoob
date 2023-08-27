@@ -22,13 +22,13 @@ const getPost = async (req, res) => {
       },
     });
 
-    if (response.length === 0) {
+    if (response.length === 0 || response === null) {
       sendResponse(res, 404);
     } else {
       sendResponse(res, 200, response);
     }
   } catch (error) {
-    sendResponse(res, 500);
+    sendResponse(res, 500, error);
   }
 };
 
@@ -106,12 +106,15 @@ const createPost = async (req, res) => {
 
   try {
     const response = await prisma.wp_posts.create({
-      post_author: req.query.user_id,
-      post_date: new Date().toISOString(),
-      post_content: description,
-      post_title: title,
-      post_excerpt: excerpt,
-      post_type: "hp_listing",
+      data: {
+        post_author: parseInt(req.query.user_id),
+        post_date: new Date().toISOString(),
+        post_content: description,
+        post_title: title,
+        post_excerpt: excerpt,
+        post_type: "hp_listing",
+        post_modified: new Date().toISOString(),
+      },
     });
 
     if (response.length === 0) {
@@ -174,12 +177,14 @@ const createRequest = async (req, res) => {
 
   try {
     const response = await prisma.wp_posts.create({
-      post_author: req.query.user_id,
-      post_date: new Date().toISOString(),
-      post_content: description,
-      post_title: title,
-      post_excerpt: excerpt,
-      post_type: "hp_request",
+      data: {
+        post_author: req.query.user_id,
+        post_date: new Date().toISOString(),
+        post_content: description,
+        post_title: title,
+        post_excerpt: excerpt,
+        post_type: "hp_request",
+      },
     });
 
     if (response.length === 0) {

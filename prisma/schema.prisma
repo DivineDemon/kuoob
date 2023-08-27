@@ -270,27 +270,27 @@ model wp_postmeta {
 }
 
 model wp_posts {
-  ID                    BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
-  post_author           BigInt   @default(0) @db.UnsignedBigInt
-  post_date             DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
-  post_content          String   @db.LongText
-  post_title            String   @db.Text
-  post_excerpt          String   @db.Text
-  post_status           String   @default("publish") @db.VarChar(20)
-  comment_status        String   @default("open") @db.VarChar(20)
-  ping_status           String   @default("open") @db.VarChar(20)
-  post_password         String   @default("") @db.VarChar(255)
-  post_name             String   @default("") @db.VarChar(200)
-  to_ping               String   @db.Text
-  pinged                String   @db.Text
-  post_modified         DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
-  post_content_filtered String   @db.LongText
-  post_parent           BigInt   @default(0) @db.UnsignedBigInt
-  guid                  String   @default("") @db.VarChar(255)
-  menu_order            Int      @default(0)
-  post_type             String   @default("post") @db.VarChar(20)
-  post_mime_type        String   @default("") @db.VarChar(100)
-  comment_count         BigInt   @default(0)
+  ID                    BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  post_author           BigInt    @default(0) @db.UnsignedBigInt
+  post_date             DateTime  @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  post_content          String    @db.LongText
+  post_title            String    @db.LongText
+  post_excerpt          String    @db.LongText
+  post_status           String    @default("publish") @db.VarChar(20)
+  comment_status        String?   @default("open") @db.VarChar(20)
+  ping_status           String?   @default("open") @db.VarChar(20)
+  post_password         String?   @default("") @db.VarChar(255)
+  post_name             String?   @default("") @db.VarChar(200)
+  to_ping               String?   @db.Text
+  pinged                String?   @db.Text
+  post_modified         DateTime? @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  post_content_filtered String?   @db.LongText
+  post_parent           BigInt?   @default(0) @db.UnsignedBigInt
+  guid                  String?   @default("") @db.VarChar(255)
+  menu_order            Int?      @default(0)
+  post_type             String    @default("post") @db.VarChar(20)
+  post_mime_type        String?   @default("") @db.VarChar(100)
+  comment_count         BigInt?   @default(0)
 
   @@index([post_author], map: "post_author")
   @@index([post_name(length: 191)], map: "post_name")
@@ -420,10 +420,10 @@ model wp_usermeta {
 
 model wp_users {
   ID                  BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
-  user_login          String   @default("") @db.VarChar(60) @unique(map: "user_login_unique")
+  user_login          String   @unique(map: "user_login_unique") @default("") @db.VarChar(60)
   user_pass           String   @default("") @db.VarChar(255)
-  user_nicename       String   @default("") @db.VarChar(50) @unique(map: "user_nicename_unique")
-  user_email          String   @default("") @db.VarChar(100) @unique(map: "user_email_unique")
+  user_nicename       String   @unique(map: "user_nicename_unique") @default("") @db.VarChar(50)
+  user_email          String   @unique(map: "user_email_unique") @default("") @db.VarChar(100)
   user_url            String   @default("") @db.VarChar(100)
   user_registered     DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   user_activation_key String   @default("") @db.VarChar(255)
