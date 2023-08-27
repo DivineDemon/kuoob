@@ -273,7 +273,6 @@ model wp_posts {
   ID                    BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
   post_author           BigInt   @default(0) @db.UnsignedBigInt
   post_date             DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
-  post_date_gmt         DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   post_content          String   @db.LongText
   post_title            String   @db.Text
   post_excerpt          String   @db.Text
@@ -285,7 +284,6 @@ model wp_posts {
   to_ping               String   @db.Text
   pinged                String   @db.Text
   post_modified         DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
-  post_modified_gmt     DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   post_content_filtered String   @db.LongText
   post_parent           BigInt   @default(0) @db.UnsignedBigInt
   guid                  String   @default("") @db.VarChar(255)

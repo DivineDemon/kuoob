@@ -75,7 +75,8 @@ const getUserPosts = async (req, res) => {
   try {
     const response = await prisma.wp_posts.findMany({
       where: {
-        post_author: req.query.user_id,
+        post_author: parseInt(req.query.user_id),
+        post_type: "hp_listing",
       },
     });
 
@@ -85,7 +86,7 @@ const getUserPosts = async (req, res) => {
       sendResponse(res, 200, response);
     }
   } catch (error) {
-    sendResponse(res, 500);
+    sendResponse(res, 500, error);
   }
 };
 
