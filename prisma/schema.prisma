@@ -422,10 +422,10 @@ model wp_usermeta {
 
 model wp_users {
   ID                  BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
-  user_login          String   @default("") @db.VarChar(60)
+  user_login          String   @default("") @db.VarChar(60) @unique(map: "user_login_unique")
   user_pass           String   @default("") @db.VarChar(255)
-  user_nicename       String   @default("") @db.VarChar(50)
-  user_email          String   @default("") @db.VarChar(100)
+  user_nicename       String   @default("") @db.VarChar(50) @unique(map: "user_nicename_unique")
+  user_email          String   @default("") @db.VarChar(100) @unique(map: "user_email_unique")
   user_url            String   @default("") @db.VarChar(100)
   user_registered     DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
   user_activation_key String   @default("") @db.VarChar(255)
