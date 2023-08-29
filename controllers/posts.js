@@ -250,24 +250,52 @@ const getUserRequests = async (req, res) => {
 };
 
 const createRequest = async (req, res) => {
-  const { title, description, excerpt } = req.body;
+  const newRequest = [];
+  const { title, description, excerpt, rate, image } = req.body;
 
   try {
-    const response = await prisma.wp_posts.create({
+    const newRequestData = await prisma.wp_posts.create({
       data: {
-        post_author: req.query.user_id,
+        post_author: parseInt(req.query.user_id),
         post_date: new Date().toISOString(),
         post_content: description,
         post_title: title,
         post_excerpt: excerpt,
         post_type: "hp_request",
+        post_modified: new Date().toISOString(),
       },
     });
 
-    if (response.length === 0) {
-      sendResponse(res, 404);
+    newRequest.push(newRequestData);
+
+    const newRequestRate = await prisma.wp_wc_product_meta_lookup.create({
+      data: {
+        product_id: parseInt(newRequestData.ID),
+        virtual: true,
+        downloadable: false,
+        min_price: rate,
+        max_price: rate,
+        onsale: false,
+      },
+    });
+
+    newRequest.push(newRequestRate);
+
+    const newRequestImage = await prisma.wp_aioseo_posts.create({
+      data: {
+        post_id: parseInt(newRequestData.ID),
+        images: image,
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+      },
+    });
+
+    newRequest.push(newRequestImage);
+
+    if (newRequest.length < 3) {
+      sendResponse(res, 400);
     } else {
-      sendResponse(res, 200, response);
+      sendResponse(res, 200, newRequest);
     }
   } catch (error) {
     sendResponse(res, 500, error);
