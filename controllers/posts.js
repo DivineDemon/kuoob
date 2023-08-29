@@ -102,10 +102,11 @@ const getUserPosts = async (req, res) => {
 };
 
 const createPost = async (req, res) => {
-  const { title, description, excerpt } = req.body;
+  const newPost = [];
+  const { title, description, excerpt, rate, image } = req.body;
 
   try {
-    const response = await prisma.wp_posts.create({
+    const newPostData = await prisma.wp_posts.create({
       data: {
         post_author: parseInt(req.query.user_id),
         post_date: new Date().toISOString(),
@@ -117,10 +118,36 @@ const createPost = async (req, res) => {
       },
     });
 
-    if (response.length === 0) {
-      sendResponse(res, 404);
+    newPost.push(newPostData);
+
+    const newPostRate = await prisma.wp_wc_product_meta_lookup.create({
+      data: {
+        product_id: parseInt(newPostData.ID),
+        virtual: true,
+        downloadable: false,
+        min_price: rate,
+        max_price: rate,
+        onsale: false,
+      },
+    });
+
+    newPost.push(newPostRate);
+
+    const newPostImage = await prisma.wp_aioseo_posts.create({
+      data: {
+        post_id: parseInt(newPostData.ID),
+        images: image,
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+      },
+    });
+
+    newPost.push(newPostImage);
+
+    if (newPost.length < 3) {
+      sendResponse(res, 400);
     } else {
-      sendResponse(res, 200, response);
+      sendResponse(res, 200, newPost);
     }
   } catch (error) {
     sendResponse(res, 500, error);
