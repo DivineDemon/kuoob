@@ -127,6 +127,56 @@ const createPost = async (req, res) => {
   }
 };
 
+const getPostCategories = async (_, res) => {
+  try {
+    let response = await prisma.wp_posts.findMany({
+      where: {
+        NOT: {
+          post_excerpt: "",
+        },
+        post_excerpt: {
+          contains: "Category",
+        },
+      },
+      select: {
+        post_excerpt: true,
+      },
+    });
+
+    if (response.length === 0) {
+      sendResponse(res, 404);
+    } else {
+      response = response.map((category) => {
+        return category.post_excerpt.split(/; T|; V|y: /)[1];
+      });
+      response = [...new Set(response)];
+      sendResponse(res, 200, response);
+    }
+  } catch (error) {
+    sendResponse(res, 500, error);
+  }
+};
+
+const getCategoryPosts = async (req, res) => {
+  try {
+    let response = await prisma.wp_posts.findMany({
+      where: {
+        post_excerpt: {
+          contains: req.query.search_word,
+        },
+      },
+    });
+
+    if (response.length === 0) {
+      sendResponse(res, 404);
+    } else {
+      sendResponse(res, 200, response);
+    }
+  } catch (error) {
+    sendResponse(res, 500, error);
+  }
+};
+
 /**
  * User Requests Management
  * GET - getRequest
@@ -207,4 +257,6 @@ module.exports = {
   createRequest,
   getStatusPosts,
   getUserRequests,
+  getCategoryPosts,
+  getPostCategories,
 };
