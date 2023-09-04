@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const { sendResponse } = require("../utils/responseHandler");
+const { extractURL } = require("../utils/helpers");
 
 const prisma = new PrismaClient();
 
@@ -34,15 +35,78 @@ const getPost = async (req, res) => {
 
 const getPosts = async (_, res) => {
   try {
-    const response = await prisma.wp_posts.findMany();
+    const posts = await prisma.wp_posts.findMany({
+      where: {
+        post_type: "hp_listing",
+      },
+    });
 
-    if (response.length === 0) {
+    let post_images = await Promise.all(
+      posts.map(async (post) => {
+        const image = await prisma.wp_aioseo_posts.findMany({
+          where: {
+            post_id: post.ID,
+          },
+          select: {
+            images: true,
+          },
+        });
+        return image;
+      })
+    );
+
+    const post_prices = await Promise.all(
+      posts.map(async (post) => {
+        const price = await prisma.wp_wc_product_meta_lookup.findMany({
+          where: {
+            product_id: post.ID,
+          },
+          select: {
+            min_price: true,
+            max_price: true,
+          },
+        });
+
+        return price;
+      })
+    );
+
+    post_images = post_images.map((post) => {
+      if (post.length !== 0) {
+        if (
+          post[0] !== undefined &&
+          post[0].images !== null &&
+          post[0].images !== undefined
+        ) {
+          let url = post[0].images;
+          if (url.includes("[{")) {
+            return extractURL(post[0].images);
+          } else {
+            return url;
+          }
+        }
+      }
+    });
+
+    const finalResponse = posts.map((post, index) => {
+      return {
+        post_image: post_images[index] !== undefined ? post_images[index] : "",
+        post_rating:
+          post_prices[index].average_rating === undefined
+            ? 0.0
+            : post_prices[index].rating_count,
+        post_title: post.post_title,
+        post_price: post_prices[index],
+      };
+    });
+
+    if (finalResponse.length === 0) {
       sendResponse(res, 404);
     } else {
-      sendResponse(res, 200, response);
+      sendResponse(res, 200, finalResponse);
     }
   } catch (error) {
-    sendResponse(res, 500);
+    sendResponse(res, 500, error);
   }
 };
 
@@ -51,6 +115,7 @@ const getStatusPosts = async (req, res) => {
     const response = await prisma.wp_posts.findMany({
       where: {
         post_status: req.query.status,
+        post_type: "hp_listing",
       },
     });
 
@@ -69,6 +134,7 @@ const getTypePosts = async (req, res) => {
     const response = await prisma.wp_posts.findMany({
       where: {
         post_type: req.query.type,
+        post_type: "hp_listing",
       },
     });
 
@@ -158,6 +224,7 @@ const getPostCategories = async (_, res) => {
   try {
     let response = await prisma.wp_posts.findMany({
       where: {
+        post_type: "hp_listing",
         NOT: {
           post_excerpt: "",
         },
@@ -188,6 +255,7 @@ const getCategoryPosts = async (req, res) => {
   try {
     let response = await prisma.wp_posts.findMany({
       where: {
+        post_type: "hp_listing",
         post_excerpt: {
           contains: req.query.search_word,
         },
@@ -204,6 +272,40 @@ const getCategoryPosts = async (req, res) => {
   }
 };
 
+const filterPosts = async (req, res) => {
+  let posts = null;
+  const { category, price } = req.body;
+
+  try {
+    if (category) {
+      posts = await prisma.wp_posts.findMany({
+        where: {
+          post_type: "hp_listing",
+          post_excerpt: {
+            contains: req.query.search_word,
+          },
+        },
+      });
+
+      posts = await Promise.all(
+        posts.map(async (post) => {
+          const response = await prisma.wp_wc_product_meta_lookup.findFirst({
+            where: {
+              OR: [
+                { min_price: price },
+                { max_price: price },
+                { min_price: { lte: price }, max_price: { gte: price } },
+              ],
+            },
+          });
+
+          return response;
+        })
+      );
+    }
+  } catch (error) {}
+};
+
 /**
  * User Requests Management
  * GET - getRequest
@@ -216,6 +318,24 @@ const getRequest = async (req, res) => {
     const response = await prisma.wp_posts.findUnique({
       where: {
         ID: req.query.post_id,
+        post_type: "hp_request",
+      },
+    });
+
+    if (response.length === 0) {
+      sendResponse(res, 404);
+    } else {
+      sendResponse(res, 200, response);
+    }
+  } catch (error) {
+    sendResponse(res, 500);
+  }
+};
+
+const getRequests = async (_, res) => {
+  try {
+    const response = await prisma.wp_posts.findMany({
+      where: {
         post_type: "hp_request",
       },
     });
@@ -307,6 +427,7 @@ module.exports = {
   getPosts,
   getRequest,
   createPost,
+  getRequests,
   getTypePosts,
   getUserPosts,
   createRequest,
