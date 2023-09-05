@@ -3,6 +3,20 @@ const { sendResponse } = require("../utils/responseHandler");
 
 const prisma = new PrismaClient();
 
+const getUsers = async (req, res) => {
+  try {
+    const response = await prisma.wp_users.findMany();
+
+    if (response.length === 0) {
+      sendResponse(res, 404);
+    } else {
+      sendResponse(res, 200, response);
+    }
+  } catch (error) {
+    sendResponse(res, 500, error);
+  }
+};
+
 const getUserByID = async (req, res) => {
   try {
     const response = await prisma.wp_users.findUnique({
@@ -58,6 +72,7 @@ const getUserByName = async (req, res) => {
 };
 
 module.exports = {
+  getUsers,
   getUserByID,
   getUserByName,
   getUserByEmail,
