@@ -15,18 +15,54 @@ const prisma = new PrismaClient();
  */
 
 const getPost = async (req, res) => {
+  /** Information Required
+   * Post Image
+   * Post Price
+   * Post Title
+   * Post Content
+   * ============
+   * User Nice Name
+   * User Created At
+   */
+
   try {
-    const response = await prisma.wp_posts.findUnique({
+    const post = await prisma.wp_posts.findUnique({
       where: {
         ID: req.query.post_id,
         post_type: "hp_listing",
       },
     });
 
-    if (response.length === 0 || response === null) {
+    let post_images = await prisma.wp_aioseo_posts.findFirst({
+      where: {
+        post_id: post.ID,
+      },
+      select: {
+        images: true,
+      },
+    });
+
+    let post_prices = await prisma.wp_wc_product_meta_lookup.findFirst({
+      where: {
+        product_id: post.ID,
+      },
+      select: {
+        max_price: true,
+        average_rating: true,
+      },
+    });
+
+    const finalResponse = {
+      post_image: extractURL(post_images.images),
+      post_rating: post_prices.average_rating,
+      post_title: post.post_title,
+      post_price: post_prices.max_price,
+    };
+
+    if (finalResponse.length === 0) {
       sendResponse(res, 404);
     } else {
-      sendResponse(res, 200, response);
+      sendResponse(res, 200, finalResponse);
     }
   } catch (error) {
     sendResponse(res, 500, error);
