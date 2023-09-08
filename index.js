@@ -1,7 +1,9 @@
 const cors = require("cors");
 const multer = require("multer");
+const socketio = require("socket.io");
 const dotenv = require("dotenv").config();
 
+const http = require("http");
 const express = require("express");
 const { errorHandler } = require("./middleware/errorHandler");
 
@@ -11,6 +13,10 @@ BigInt.prototype.toJSON = function () { return this.toString() };
 // App Initialization
 const app = express();
 const upload = multer();
+
+// Socket IO Initialization
+const server = http.createServer(app);
+const io = socketio(server);
 
 // Middleware
 app.use(cors());
