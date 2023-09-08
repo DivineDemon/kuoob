@@ -15,27 +15,16 @@ const prisma = new PrismaClient();
  */
 
 const getPost = async (req, res) => {
-  /** Information Required
-   * Post Image
-   * Post Price
-   * Post Title
-   * Post Content
-   * ============
-   * User Nice Name
-   * User Created At
-   */
-
   try {
-    const post = await prisma.wp_posts.findUnique({
+    const post = await prisma.wp_posts.findFirst({
       where: {
         ID: req.query.post_id,
-        post_type: "hp_listing",
       },
     });
 
     let post_images = await prisma.wp_aioseo_posts.findFirst({
       where: {
-        post_id: post.ID,
+        post_id: parseInt(post.ID),
       },
       select: {
         images: true,
@@ -44,7 +33,7 @@ const getPost = async (req, res) => {
 
     let post_prices = await prisma.wp_wc_product_meta_lookup.findFirst({
       where: {
-        product_id: post.ID,
+        product_id: parseInt(post.ID),
       },
       select: {
         max_price: true,
@@ -52,11 +41,25 @@ const getPost = async (req, res) => {
       },
     });
 
+    let user = await prisma.wp_users.findFirst({
+      where: {
+        ID: parseInt(post.post_author),
+      },
+      select: {
+        user_nicename: true,
+        user_registered: true,
+      },
+    });
+
     const finalResponse = {
-      post_image: extractURL(post_images.images),
-      post_rating: post_prices.average_rating,
+      post_image: post_images !== null ? extractURL(post_images.images) : "",
+      post_rating: post_prices !== null ? post_prices.average_rating : 0,
       post_title: post.post_title,
-      post_price: post_prices.max_price,
+      post_price: post_prices !== null ? post_prices.max_price : 0,
+      user: {
+        username: user.user_nicename,
+        createdAt: new Date(user.user_registered).toLocaleDateString(),
+      },
     };
 
     if (finalResponse.length === 0) {
@@ -133,6 +136,7 @@ const getPosts = async (_, res) => {
             : post_prices[index].rating_count,
         post_title: post.post_title,
         post_price: post_prices[index],
+        post_status: post.post_status,
       };
     });
 
@@ -556,13 +560,34 @@ const getRequests = async (_, res) => {
       where: {
         post_type: "hp_request",
       },
+      select: {
+        ID: true,
+        post_date: true,
+        post_title: true,
+        post_author: true,
+      },
     });
+
+    let users = await Promise.all(
+      requests.map(async (request) => {
+        const user = await prisma.wp_users.findFirst({
+          where: {
+            ID: parseInt(request.post_author),
+          },
+          select: {
+            user_nicename: true,
+          },
+        });
+
+        return user;
+      })
+    );
 
     let post_images = await Promise.all(
       requests.map(async (post) => {
         const image = await prisma.wp_aioseo_posts.findMany({
           where: {
-            post_id: post.ID,
+            post_id: parseInt(post.ID),
           },
           select: {
             images: true,
@@ -576,7 +601,7 @@ const getRequests = async (_, res) => {
       requests.map(async (post) => {
         const price = await prisma.wp_wc_product_meta_lookup.findMany({
           where: {
-            product_id: post.ID,
+            product_id: parseInt(post.ID),
           },
           select: {
             min_price: true,
@@ -614,6 +639,8 @@ const getRequests = async (_, res) => {
             : post_prices[index].rating_count,
         post_title: post.post_title,
         post_price: post_prices[index],
+        created_at: new Date(post.post_date).toLocaleDateString(),
+        author: users[index].user_nicename,
       };
     });
 
