@@ -1,42 +1,7 @@
-const fs = require("fs").promises;
 const { PrismaClient } = require("@prisma/client");
 const { sendResponse } = require("../utils/responseHandler");
 
 const prisma = new PrismaClient();
-
-const sendMessage = async (req, res) => {
-  let userData = await fs.readFile("../kuoob/token.txt", "utf-8");
-  userData = JSON.parse(userData);
-
-  const formData = new FormData();
-  for (const key in req.body) {
-    formData.append(key, req.body[key]);
-  }
-
-  try {
-    const response = await fetch(
-      "https://kuoob.com/wp-json/hivepress/v1/messages/",
-      {
-        method: "POST",
-        body: formData,
-        headers: {
-          authorization: `Bearer ${userData.token}`,
-        },
-        credentials: "include",
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      sendResponse(res, response.status, errorData);
-    } else {
-      const responseData = await response.json();
-      sendResponse(res, 201, responseData);
-    }
-  } catch (error) {
-    sendResponse(res, 500);
-  }
-};
 
 const getMessage = async (req, res) => {
   try {
@@ -52,7 +17,7 @@ const getMessage = async (req, res) => {
       sendResponse(res, 200, response);
     }
   } catch (error) {
-    sendResponse(res, 500);
+    sendResponse(res, 500, error);
   }
 };
 
@@ -145,7 +110,6 @@ const getUserTypeMessages = async (req, res) => {
 
 module.exports = {
   getMessage,
-  sendMessage,
   getAllMessages,
   getUserMessages,
   getTypeMessages,
