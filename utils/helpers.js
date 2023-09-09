@@ -69,7 +69,12 @@ const calculateRevenueAndTax = (data) => {
   return result;
 };
 
+const areAllNull = (array) => {
+  return array.every((value) => value === null);
+}
+
 module.exports = {
   extractURL,
+  areAllNull,
   calculateRevenueAndTax,
 };

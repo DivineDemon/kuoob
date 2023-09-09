@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
-const { extractURL } = require("../utils/helpers");
 const { sendResponse } = require("../utils/responseHandler");
+const { areAllNull, extractURL } = require("../utils/helpers");
 
 const prisma = new PrismaClient();
 
@@ -52,9 +52,11 @@ const getPost = async (req, res) => {
     });
 
     const finalResponse = {
+      post_id: parseInt(post.ID),
       post_image: post_images !== null ? extractURL(post_images.images) : "",
       post_rating: post_prices !== null ? post_prices.average_rating : 0,
       post_title: post.post_title,
+      post_content: post.post_content,
       post_price: post_prices !== null ? post_prices.max_price : 0,
       user: {
         username: user.user_nicename,
@@ -78,7 +80,28 @@ const getPosts = async (_, res) => {
       where: {
         post_type: "hp_listing",
       },
+      select: {
+        ID: true,
+        post_title: true,
+        post_status: true,
+        post_author: true,
+      },
     });
+
+    let users = await Promise.all(
+      posts.map(async (post) => {
+        const author = await prisma.wp_users.findFirst({
+          where: {
+            ID: parseInt(post.post_author),
+          },
+          select: {
+            user_nicename: true,
+          },
+        });
+
+        return author;
+      })
+    );
 
     let post_images = await Promise.all(
       posts.map(async (post) => {
@@ -101,8 +124,8 @@ const getPosts = async (_, res) => {
             product_id: post.ID,
           },
           select: {
-            min_price: true,
             max_price: true,
+            average_rating: true,
           },
         });
 
@@ -129,14 +152,16 @@ const getPosts = async (_, res) => {
 
     const finalResponse = posts.map((post, index) => {
       return {
+        post_id: parseInt(post.ID),
         post_image: post_images[index] !== undefined ? post_images[index] : "",
         post_rating:
           post_prices[index].average_rating === undefined
             ? 0.0
-            : post_prices[index].rating_count,
+            : post_prices[index].average_rating,
         post_title: post.post_title,
-        post_price: post_prices[index],
+        post_price: post_prices[index].max_price,
         post_status: post.post_status,
+        post_author: users[index].user_nicename,
       };
     });
 
@@ -246,6 +271,7 @@ const getUserPosts = async (req, res) => {
 
     const finalResponse = posts.map((post, index) => {
       return {
+        post_id: parseInt(post.ID),
         post_image: post_images[index] !== undefined ? post_images[index] : "",
         post_rating:
           post_prices[index].average_rating === undefined
@@ -352,62 +378,38 @@ const getPostCategories = async (_, res) => {
 
 const getCategoryPosts = async (req, res) => {
   try {
-    let response = await prisma.wp_posts.findMany({
+    const posts = await prisma.wp_posts.findMany({
       where: {
         post_type: "hp_listing",
         post_excerpt: {
           contains: req.query.search_word,
         },
       },
+      select: {
+        ID: true,
+        post_title: true,
+        post_status: true,
+        post_author: true,
+      },
     });
 
-    if (response.length === 0) {
-      sendResponse(res, 404);
-    } else {
-      sendResponse(res, 200, response);
-    }
-  } catch (error) {
-    sendResponse(res, 500, error);
-  }
-};
-
-const filterPosts = async (req, res) => {
-  let posts = null;
-  let filtered = null;
-
-  try {
-    if (req.query.search_word !== undefined) {
-      posts = await prisma.wp_posts.findMany({
-        where: {
-          post_type: "hp_listing",
-          post_excerpt: {
-            contains: req.query.search_word,
+    let users = await Promise.all(
+      posts.map(async (post) => {
+        const author = await prisma.wp_users.findFirst({
+          where: {
+            ID: parseInt(post.post_author),
           },
-        },
-      });
+          select: {
+            user_nicename: true,
+          },
+        });
 
-      filtered = await Promise.all(
-        posts.map(async () => {
-          const response = await prisma.wp_wc_product_meta_lookup.findFirst({
-            where: {
-              OR: [
-                { min_price: parseFloat(req.query.price) },
-                { max_price: parseFloat(req.query.price) },
-                {
-                  min_price: { lte: parseFloat(req.query.price) },
-                  max_price: { gte: parseFloat(req.query.price) },
-                },
-              ],
-            },
-          });
-
-          return response;
-        })
-      );
-    }
+        return author;
+      })
+    );
 
     let post_images = await Promise.all(
-      filtered.map(async (post) => {
+      posts.map(async (post) => {
         const image = await prisma.wp_aioseo_posts.findMany({
           where: {
             post_id: post.ID,
@@ -421,14 +423,14 @@ const filterPosts = async (req, res) => {
     );
 
     let post_prices = await Promise.all(
-      filtered.map(async (post) => {
+      posts.map(async (post) => {
         const price = await prisma.wp_wc_product_meta_lookup.findMany({
           where: {
             product_id: post.ID,
           },
           select: {
-            min_price: true,
             max_price: true,
+            average_rating: true,
           },
         });
 
@@ -453,17 +455,219 @@ const filterPosts = async (req, res) => {
       }
     });
 
-    const finalResponse = filtered.map((post, index) => {
+    const finalResponse = posts.map((post, index) => {
       return {
+        post_id: parseInt(post.ID),
         post_image: post_images[index] !== undefined ? post_images[index] : "",
         post_rating:
           post_prices[index].average_rating === undefined
             ? 0.0
-            : post_prices[index].rating_count,
+            : post_prices[index].average_rating,
         post_title: post.post_title,
-        post_price: post_prices[index],
+        post_price: post_prices[index].max_price,
+        post_status: post.post_status,
+        post_author: users[index].user_nicename,
       };
     });
+
+    if (finalResponse.length === 0) {
+      sendResponse(res, 404);
+    } else {
+      sendResponse(res, 200, finalResponse);
+    }
+  } catch (error) {
+    sendResponse(res, 500, error);
+  }
+};
+
+const filterPosts = async (req, res) => {
+  let users = null;
+  let posts = null;
+  let filtered = null;
+  let post_images = null;
+  let post_prices = null;
+  let finalResponse = null;
+  const { price, search_word } = req.query;
+
+  try {
+    if (price && !search_word) {
+      posts = await prisma.wp_wc_product_meta_lookup.findMany({
+        where: {
+          OR: [
+            { min_price: parseFloat(req.query.price) },
+            { max_price: parseFloat(req.query.price) },
+            {
+              min_price: { lte: parseFloat(req.query.price) },
+              max_price: { gte: parseFloat(req.query.price) },
+            },
+          ],
+        },
+        select: {
+          max_price: true,
+          product_id: true,
+          average_rating: true,
+        },
+      });
+
+      filtered = await Promise.all(
+        posts.map(async (post) => {
+          const postDetail = await prisma.wp_posts.findFirst({
+            where: {
+              ID: parseInt(post.product_id),
+            },
+            select: {
+              ID: true,
+              post_title: true,
+              post_author: true,
+            },
+          });
+
+          return postDetail;
+        })
+      );
+    } else if (!price && search_word) {
+      filtered = await prisma.wp_posts.findMany({
+        where: {
+          post_type: "hp_listing",
+          post_excerpt: {
+            contains: req.query.search_word,
+          },
+        },
+        select: {
+          ID: true,
+          post_title: true,
+          post_author: true,
+        },
+      });
+    } else if (price && search_word) {
+      posts = await prisma.wp_wc_product_meta_lookup.findMany({
+        where: {
+          OR: [
+            { min_price: parseFloat(req.query.price) },
+            { max_price: parseFloat(req.query.price) },
+            {
+              min_price: { lte: parseFloat(req.query.price) },
+              max_price: { gte: parseFloat(req.query.price) },
+            },
+          ],
+        },
+        select: {
+          max_price: true,
+          product_id: true,
+          average_rating: true,
+        },
+      });
+
+      filtered = await Promise.all(
+        posts.map(async (post) => {
+          const postDetail = await prisma.wp_posts.findFirst({
+            where: {
+              ID: parseInt(post.product_id),
+              post_excerpt: {
+                contains: req.query.search_word,
+              },
+            },
+            select: {
+              ID: true,
+              post_title: true,
+              post_author: true,
+            },
+          });
+
+          return postDetail;
+        })
+      );
+    } else {
+      filtered = await prisma.wp_posts.findMany({
+        where: {
+          post_type: "hp_listing",
+        },
+        select: {
+          ID: true,
+          post_title: true,
+          post_author: true,
+        },
+      });
+    }
+
+    if (areAllNull(filtered)) {
+      sendResponse(res, 404);
+    } else {
+      post_images = await Promise.all(
+        filtered.map(async (post) => {
+          const image = await prisma.wp_aioseo_posts.findFirst({
+            where: {
+              post_id: post.ID,
+            },
+            select: {
+              images: true,
+            },
+          });
+          return image;
+        })
+      );
+
+      post_prices = await Promise.all(
+        filtered.map(async (post) => {
+          const price = await prisma.wp_wc_product_meta_lookup.findFirst({
+            where: {
+              product_id: post.ID,
+            },
+            select: {
+              max_price: true,
+              average_rating: true,
+            },
+          });
+
+          return price;
+        })
+      );
+
+      post_images = post_images.map((post) => {
+        if (post.length !== 0) {
+          if (
+            post[0] !== undefined &&
+            post[0].images !== null &&
+            post[0].images !== undefined
+          ) {
+            let url = post[0].images;
+            if (url.includes("[{")) {
+              return extractURL(post[0].images);
+            } else {
+              return url;
+            }
+          }
+        }
+      });
+
+      users = filtered.map(async (post) => {
+        const creator = await prisma.wp_users.findFirst({
+          where: {
+            ID: parseInt(post.post_author),
+          },
+          select: {
+            ID: true,
+            user_nicename: true,
+          },
+        });
+
+        return creator;
+      });
+
+      finalResponse = filtered.map((post, index) => {
+        return {
+          post_image:
+            post_images[index] !== undefined ? post_images[index].images : "",
+          post_rating: post_prices[index].average_rating,
+          post_title: post.post_title,
+          post_price: post_prices[index].max_price,
+          user: {
+            user_id: parseInt(users[index].ID),
+            username: users[index].user_nicename,
+          },
+        };
+      });
+    }
 
     if (finalResponse.length === 0) {
       sendResponse(res, 404);

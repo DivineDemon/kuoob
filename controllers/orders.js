@@ -24,6 +24,7 @@ const getUserOrders = async (req, res) => {
           },
           select: {
             post_title: true,
+            post_author: true,
           },
         });
 
@@ -50,6 +51,7 @@ const getUserOrders = async (req, res) => {
 
     const finalResponse = userOrders.map((post, index) => {
       return {
+        post_author: parseInt(products[index].post_author),
         post_title:
           products[index].post_title !== "" ? products[index].post_title : "",
         post_price:
@@ -185,22 +187,6 @@ const receivedOrders = async (req, res) => {
   } catch (error) {
     sendResponse(res, 500, error);
   }
-};
-
-const placedOrders = async (req, res) => {
-  /**
-   * Order Details (wp_wc_order_stats)
-   * - status (status)
-   * - date (date_created)
-   * - total (net_total)
-   * - tax (tax_total)
-   * - grand total (total_sales)
-   * User Details (wp_users)
-   * - username (user_nicename)
-   * Product Details
-   * - title (post_title)
-   * - type (post_type)
-   */
 };
 
 module.exports = {

@@ -165,7 +165,12 @@ const likedPosts = async (req, res) => {
       liked.map(async (post) => {
         const response = await prisma.wp_posts.findFirst({
           where: {
-            ID: post.post_id,
+            ID: parseInt(post.post_id),
+          },
+          select: {
+            ID: true,
+            post_title: true,
+            post_author: true,
           },
         });
 
@@ -203,6 +208,22 @@ const likedPosts = async (req, res) => {
       })
     );
 
+    let users = await Promise.all(
+      finalPosts.map(async (post) => {
+        const postAuthor = await prisma.wp_users.findFirst({
+          where: {
+            ID: parseInt(post.post_author),
+          },
+          select: {
+            ID: true,
+            user_nicename: true,
+          },
+        });
+
+        return postAuthor;
+      })
+    );
+
     post_images = post_images.map((post) => {
       if (post.length !== 0) {
         if (
@@ -222,6 +243,7 @@ const likedPosts = async (req, res) => {
 
     const finalResponse = finalPosts.map((post, index) => {
       return {
+        post_id: parseInt(post.ID),
         post_image: post_images[index] !== undefined ? post_images[index] : "",
         post_rating:
           post_prices[index].average_rating === undefined
@@ -229,6 +251,7 @@ const likedPosts = async (req, res) => {
             : post_prices[index].rating_count,
         post_title: post.post_title,
         post_price: post_prices[index],
+        user: users[index],
       };
     });
 
@@ -242,11 +265,57 @@ const likedPosts = async (req, res) => {
   }
 };
 
+const isLiked = async (req, res) => {
+  try {
+    const response = await prisma.favourites.findFirst({
+      where: {
+        user_id: parseInt(req.query.user_id),
+        post_id: parseInt(req.query.post_id),
+      },
+    });
+
+    if (response) {
+      sendResponse(res, 200, {
+        isLiked: true,
+      });
+    } else {
+      sendResponse(res, 200, {
+        isLiked: false,
+      });
+    }
+  } catch (error) {
+    sendResponse(res, 500, error);
+  }
+};
+
+const deleteUser = async (req, res) => {
+  try {
+    const response = await prisma.wp_users.update({
+      where: {
+        ID: parseInt(req.query.user_id),
+      },
+      data: {
+        user_status: 1,
+      },
+    });
+
+    if (response) {
+      sendResponse(res, 200, response);
+    } else {
+      sendResponse(res, 404);
+    }
+  } catch (error) {
+    sendResponse(res, 500, error);
+  }
+};
+
 module.exports = {
+  isLiked,
   getUsers,
   likePost,
   likedPosts,
   unlikePost,
+  deleteUser,
   updateUser,
   getUserByID,
   getUserByName,
