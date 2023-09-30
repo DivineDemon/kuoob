@@ -48,21 +48,19 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { email, password } = req.body;
     let user = null;
 
-    if (email) {
+    if (email.match(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/)) {
       user = await prisma.wp_users.findFirst({
         where: {
           user_email: email,
         },
       });
-    }
-
-    if (username) {
+    } else {
       user = await prisma.wp_users.findFirst({
         where: {
-          user_nicename: username,
+          user_nicename: email,
         },
       });
     }
